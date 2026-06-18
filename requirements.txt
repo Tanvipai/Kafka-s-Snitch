@@ -1,0 +1,33 @@
+# file ingestion
+python-magic-bin==0.4.14
+python-docx==1.1.2
+pymupdf==1.24.5
+chardet==5.2.0
+
+# pattern scanning
+phonenumbers==8.13.39
+
+# ml classification
+spacy==3.7.5
+transformers==4.44.0
+torch==2.3.1
+
+# kafka streaming
+confluent-kafka==2.5.0
+
+# integrity/cryptography
+cryptography==43.0.1
+
+# anomaly detection
+pandas==2.2.2
+scikit-learn==1.5.1
+shap==0.46.0
+faker==26.0.0
+scipy==1.14.0
+
+# dashboard
+streamlit==1.37.0
+plotly==5.23.0
+
+# general
+python-dotenv==1.0.1
