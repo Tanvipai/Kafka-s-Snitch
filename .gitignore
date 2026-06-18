@@ -4,6 +4,7 @@ __pycache__/
 *.db
 *.sqlite
 data/raw/*
-!data/raw/.gitkeepvenv/
+!data/raw/.gitkeep
+venv/
 data/synthetic/samples/
 data/synthetic/failure_samples/
