@@ -20,7 +20,6 @@ def ensure_output_dir():
 
 
 def fake_ssn():
-    """Format: XXX-XX-XXXX"""
     return f"{random.randint(100,999)}-{random.randint(10,99)}-{random.randint(1000,9999)}"
 
 
@@ -39,9 +38,7 @@ def fake_password():
 
 
 def generate_hr_csv(index: int):
-
     file_path = OUTPUT_DIR / f"hr_employees_{index:03d}.csv"
-
     rows = []
     for _ in range(random.randint(20, 50)):
         rows.append({
@@ -55,19 +52,15 @@ def generate_hr_csv(index: int):
             "hire_date": fake.date_between(start_date="-10y", end_date="today").isoformat(),
             "manager": fake.name(),
         })
-
     with open(file_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
-
     print(f"  created: {file_path.name}")
 
 
 def generate_medical_note(index: int):
-    """Patient notes with diagnoses, medications, patient IDs."""
     file_path = OUTPUT_DIR / f"patient_note_{index:03d}.txt"
-
     diagnoses = [
         "Type 2 Diabetes Mellitus", "Hypertension", "Major Depressive Disorder",
         "Chronic Kidney Disease Stage 3", "Atrial Fibrillation", "Hypothyroidism",
@@ -77,7 +70,6 @@ def generate_medical_note(index: int):
         "Metformin 500mg", "Lisinopril 10mg", "Sertraline 50mg",
         "Atorvastatin 20mg", "Amlodipine 5mg", "Levothyroxine 75mcg"
     ]
-
     content = f"""PATIENT MEDICAL RECORD
 ======================
 Patient ID   : MRN-{random.randint(100000, 999999)}
@@ -109,14 +101,12 @@ Patient was advised to {random.choice(["follow up in 3 months", "schedule lab wo
 
 Physician Signature: Dr. {fake.name()} | License: {random.randint(100000, 999999)}
 """
-
     file_path.write_text(content, encoding="utf-8")
     print(f"  created: {file_path.name}")
 
 
 def generate_python_script(index: int):
     file_path = OUTPUT_DIR / f"config_script_{index:03d}.py"
-
     db_host = fake.ipv4()
     content = f"""#!/usr/bin/env python3
 # Database configuration and API setup
@@ -130,7 +120,6 @@ AWS_ACCESS_KEY_ID = "{fake_api_key()}"
 AWS_SECRET_ACCESS_KEY = "{fake.sha256()[:40]}"
 AWS_REGION = "us-east-1"
 
-# Database connection
 DB_CONFIG = {{
     "host": "{db_host}",
     "port": 5432,
@@ -157,24 +146,18 @@ def get_s3_client():
         region_name=AWS_REGION,
     )
 """
-
     file_path.write_text(content, encoding="utf-8")
     print(f"  created: {file_path.name}")
 
 
 def generate_financial_pdf(index: int):
-    
     file_path = OUTPUT_DIR / f"invoice_{index:03d}.pdf"
-
     c = canvas.Canvas(str(file_path), pagesize=letter)
     width, height = letter
-
     c.setFont("Helvetica-Bold", 18)
     c.drawString(50, height - 60, f"INVOICE #{random.randint(10000, 99999)}")
-
     c.setFont("Helvetica", 11)
     y = height - 100
-
     lines = [
         f"Date: {fake.date_this_year().isoformat()}",
         f"Bill To: {fake.name()}",
@@ -188,46 +171,69 @@ def generate_financial_pdf(index: int):
         "",
         "Items:",
     ]
-
     for _ in range(random.randint(2, 5)):
         qty = random.randint(1, 10)
         price = random.uniform(10, 500)
         lines.append(f"  - {fake.bs().title()} x{qty} @ ${price:.2f}")
-
     for line in lines:
         c.drawString(50, y, line)
         y -= 20
-
     c.save()
     print(f"  created: {file_path.name}")
 
 
+def generate_ambiguous_dual_signal(index: int):
+    
+    file_path = OUTPUT_DIR / f"ambiguous_dual_{index:03d}.txt"
+    content = f"""Internal Note -- {fake.date_this_year().isoformat()}
+
+{fake.name()} has been out of office more than usual this quarter and
+mentioned needing to adjust their schedule around some ongoing
+appointments. Given the circumstances, {fake.first_name()} from finance
+is reviewing whether their current compensation
+"""
+    file_path.write_text(content, encoding="utf-8")
+    print(f"  created: {file_path.name}")
+
+
+def generate_ambiguous_vague(index: int):
+   
+    file_path = OUTPUT_DIR / f"ambiguous_vague_{index:03d}.txt"
+    content = f"""Quick update from the {fake.city()} office.
+
+{fake.paragraph(nb_sentences=4)}
+
+Let's regroup once everyone's had a chance to look this over.
+"""
+    file_path.write_text(content, encoding="utf-8")
+    print(f"  created: {file_path.name}")
+
+
 def generate_all(
-    n_hr=15,
-    n_medical=15,
-    n_scripts=10,
-    n_financial=10,
+    n_hr=15, n_medical=15, n_scripts=10, n_financial=10,
+    n_ambiguous_dual=2, n_ambiguous_vague=2,
 ):
     ensure_output_dir()
-    total = n_hr + n_medical + n_scripts + n_financial
+    total = n_hr + n_medical + n_scripts + n_financial + n_ambiguous_dual + n_ambiguous_vague
     print(f"\ngenerating {total} synthetic files in {OUTPUT_DIR}\n")
-
     print("HR CSV files:")
     for i in range(n_hr):
         generate_hr_csv(i)
-
     print("\nMedical notes:")
     for i in range(n_medical):
         generate_medical_note(i)
-
     print("\nPython scripts with credentials:")
     for i in range(n_scripts):
         generate_python_script(i)
-
     print("\nFinancial PDFs:")
     for i in range(n_financial):
         generate_financial_pdf(i)
-
+    print("\nAmbiguous (dual-signal) edge cases:")
+    for i in range(n_ambiguous_dual):
+        generate_ambiguous_dual_signal(i)
+    print("\nAmbiguous (vague) edge cases:")
+    for i in range(n_ambiguous_vague):
+        generate_ambiguous_vague(i)
     print(f"\ndone. {total} files in {OUTPUT_DIR}/")
 
 
