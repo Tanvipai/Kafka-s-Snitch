@@ -19,11 +19,13 @@ COMPLIANCE_MAP = {
     "credentials": [],
 }
 
+
 RISK_TIER_MAP = {
     "credentials": "Critical",   # leaked secrets are immediately exploitable
     "medical_phi": "High",       # HIPAA exposure
     "financial": "High",         # payment data exposure
     "hr_data": "Medium",         # PII, but less immediately exploitable
+    "unclassified": "High",
 }
 
 
@@ -53,20 +55,17 @@ FINDING_WEIGHTS = {
     "GITHUB_TOKEN": {"credentials": 2.0},
     "SECRET_ASSIGNMENT": {"credentials": 1.5},
     "API_KEY": {"credentials": 1.0},
-    # SSN shows up in both our HR csvs and medical notes -- it can't
-    # disambiguate alone, so it nudges both and lets keywords decide.
+   
     "SSN": {"hr_data": 1.0, "medical_phi": 1.0},
     "CREDIT_CARD": {"financial": 2.0},
     "IBAN": {"financial": 1.5},
-    # IPs show up in our config_script files (DB host) -- weak nudge
-    # toward credentials, not strong enough to matter alone.
+   
     "IP_ADDRESS": {"credentials": 0.3},
 }
 
 
 GENERIC_FINDING_BOOST = 0.2
 GENERIC_FINDING_TYPES = {"EMAIL", "PHONE"}
-
 
 TIER1_MARGIN_THRESHOLD = 1.0
 TIER1_FLOOR_THRESHOLD = 1.5
@@ -98,10 +97,7 @@ class ClassificationResult:
 
 
 def score_categories(text: str, findings: list) -> dict:
-    """
-    Tier 1 scoring. Pure function -- no model calls -- so it's the part
-    we can unit test without spaCy/BART/Ollama installed at all.
-    """
+    
     scores = {c: 0.0 for c in CATEGORIES}
     lowered = text.lower()
 
@@ -167,7 +163,7 @@ class CascadeClassifier:
         label_keys = list(TIER2_LABELS.keys())
 
         result = classifier(text, candidate_labels=label_text)
-        # result["labels"]/["scores"] are sorted descending already
+       
         top_label_text, top_score = result["labels"][0], result["scores"][0]
         second_score = result["scores"][1] if len(result["scores"]) > 1 else 0.0
 
@@ -218,16 +214,25 @@ class CascadeClassifier:
             if category not in CATEGORIES:
                 category = "hr_data"
             reasoning = parsed.get("reasoning", "")
+
+            
+            confidence = 0.6
+
         except (requests.RequestException, json.JSONDecodeError) as e:
             logger.error(f"tier 3 LLM call failed: {e}")
-            #Tier 3 
-            category = max(tier1_scores, key=tier1_scores.get)
-            reasoning = f"LLM call failed ({e}); fell back to tier1 best guess"
+            
+            if any(tier1_scores.values()):
+                category = max(tier1_scores, key=tier1_scores.get)
+                confidence = 0.3
+                reasoning = f"LLM call failed ({e}); fell back to weak tier1 signal"
+            else:
+                category = "unclassified"
+                confidence = 0.0
+                reasoning = f"LLM call failed ({e}); no signal anywhere -- needs human review"
 
-       
         return self._build_result(
             category=category,
-            confidence=0.6,
+            confidence=confidence,
             tier=3,
             tier1_scores=tier1_scores,
             notes=reasoning,
