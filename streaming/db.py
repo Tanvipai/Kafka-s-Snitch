@@ -40,6 +40,11 @@ def init_db():
         )
     """)
 
+    conn.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_alerts_file_hash
+        ON alerts(file_hash)
+    """)
+
     conn.commit()
     conn.close()
 

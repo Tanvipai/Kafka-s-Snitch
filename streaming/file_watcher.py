@@ -7,7 +7,7 @@ from pathlib import Path
 
 from confluent_kafka import Producer
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ def main():
     producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
     handler = NewFileHandler(producer)
 
-    observer = Observer()
+    observer = PollingObserver()
     observer.schedule(handler, str(WATCHED_DIR), recursive=False)
     observer.start()
 
