@@ -7,4 +7,6 @@ data/raw/*
 !data/raw/.gitkeep
 venv/
 data/synthetic/samples/
-data/synthetic/failure_samples/
+data/synthetic/failure_samples/keys/
+data/demo_snapshots/
+data/snapshot_chain.json
