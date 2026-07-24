@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import shap
 
-from isolation_forest import (
+from anomaly.detectors.isolation_forest import (
     DATA_PATH,
     FEATURES,
     IsolationForestDetector,
